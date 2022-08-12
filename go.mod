@@ -1,4 +1,4 @@
-module go-parquet-tools
+module github.com/ktrueda/go-parquet-tools
 
 go 1.17
 
