@@ -10,7 +10,7 @@ import (
 func TestToTableString(t *testing.T) {
 	dir, _ := os.Getwd()
 	filepath := dir + "/../test_resources/test1.parquet"
-	actual :=	toTableString(filepath, TableConfigDefault)
+	actual := toTableString(filepath, TableConfigDefault)
 	expected := `+-------+-----+-------+
 | one   | two | three |
 +-------+-----+-------+

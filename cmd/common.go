@@ -84,7 +84,7 @@ var TableConfigDefault = TableConfig{
 	nilExpression: "<nil>",
 }
 
-func readAsTable(filepath string, config TableConfig) table.Writer{
+func readAsTable(filepath string, config TableConfig) table.Writer {
 
 	tbl := table.NewWriter()
 
@@ -123,7 +123,7 @@ func readAsTable(filepath string, config TableConfig) table.Writer{
 				if val, ok := d.Next(); ok {
 					if val == nil {
 						rowVal = append(rowVal, config.nilExpression)
-					}else{
+					} else {
 						rowVal = append(rowVal, val)
 					}
 					data = true

@@ -16,6 +16,7 @@ type CsvOptions struct {
 var (
 	csvOpt = &CsvOptions{}
 )
+
 // csvCmd represents the csv command
 var csvCmd = &cobra.Command{
 	Use:   "csv",
@@ -38,7 +39,7 @@ func init() {
 	csvCmd.Flags().StringVarP(&csvOpt.nilExpression, "nil", "n", "<nil>", "nil expression")
 }
 
-func toCsvString(filepath string, config TableConfig) string{
+func toCsvString(filepath string, config TableConfig) string {
 	tbl := readAsTable(filepath, config)
 	return tbl.RenderCSV()
 }

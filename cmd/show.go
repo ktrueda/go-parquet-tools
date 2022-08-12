@@ -30,8 +30,7 @@ var showCmd = &cobra.Command{
 		config := TableConfig{}
 		config.nilExpression = showOpt.nilExpression
 
-
-		tableStr := toTableString(filepath, config)	
+		tableStr := toTableString(filepath, config)
 		fmt.Print(tableStr)
 	},
 }
