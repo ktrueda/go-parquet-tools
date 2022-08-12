@@ -50,8 +50,6 @@ func check(e error) {
 
 func getFileMeta(fp *os.File) parquet.FileMetaData {
 	metaSize := getFileMetaSize(fp)
-	fmt.Println("metaSize:", metaSize)
-
 	_, err := fp.Seek(int64(-1*(8+metaSize)), os.SEEK_END)
 	check(err)
 	b := make([]byte, metaSize)
