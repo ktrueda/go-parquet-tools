@@ -5,8 +5,7 @@ Alternative to [pypi parquet-tools](https://pypi.org/project/parquet-tools/) in 
 ## Install 
 
 ```bash
-git clone git@github.com:ktrueda/go-parquet-tools.git
-go install
+go install github.com/ktrueda/go-parquet-tools@latest
 ```
 
 ## Usage
