@@ -1,0 +1,33 @@
+name: Run CLI test
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18.x
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+      - name: Install 
+        run: |
+          go install
+      - name: Run test[help]
+        run: |
+          go-parquet-tools --help
+          go-parquet-tools show --help
+          go-parquet-tools csv --help
+          go-parquet-tools inspect --help
+      - name: Run show
+        run: |
+          go-parquet-tools show ./test_resources/test1.parquet
+      - name: Run csv
+        run: |
+          go-parquet-tools csv ./test_resources/test1.parquet
+      - name: Run inspect
+        run: |
+          go-parquet-tools inspect ./test_resources/test1.parquet
