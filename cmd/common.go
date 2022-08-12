@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"go-parquet-tools/gen-go/parquet"
 	"log"
 	"os"
+
+	"github.com/ktrueda/go-parquet-tools/gen-go/parquet"
 
 	"github.com/apache/arrow/go/v10/parquet/file"
 	"github.com/apache/thrift/lib/go/thrift"
