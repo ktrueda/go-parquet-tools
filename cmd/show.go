@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 )
 
@@ -28,5 +29,6 @@ func init() {
 
 func toTableString(filepath string) string {
 	tbl := readAsTable(filepath)
+	tbl.Style().Format.Header = text.FormatDefault
 	return tbl.Render()
 }

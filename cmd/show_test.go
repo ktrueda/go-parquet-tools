@@ -12,7 +12,7 @@ func TestToTableString(t *testing.T) {
 	filepath := dir + "/../test_resources/test1.parquet"
 	actual :=	toTableString(filepath)
 	expected := `+-------+-----+-------+
-| ONE   | TWO | THREE |
+| one   | two | three |
 +-------+-----+-------+
 | -1    | foo | true  |
 | <nil> | bar | false |
