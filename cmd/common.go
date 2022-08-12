@@ -78,7 +78,15 @@ func getFileMetaSize(fp *os.File) int {
 	return int(binary.LittleEndian.Uint32(b2))
 }
 
-func readAsTable(filepath string) table.Writer{
+type TableConfig struct {
+	nilExpression string
+}
+
+var TableConfigDefault = TableConfig{
+	nilExpression: "<nil>",
+}
+
+func readAsTable(filepath string, config TableConfig) table.Writer{
 
 	tbl := table.NewWriter()
 
@@ -115,7 +123,11 @@ func readAsTable(filepath string) table.Writer{
 			data := false
 			for _, d := range dumpers {
 				if val, ok := d.Next(); ok {
-					rowVal = append(rowVal, val)
+					if val == nil {
+						rowVal = append(rowVal, config.nilExpression)
+					}else{
+						rowVal = append(rowVal, val)
+					}
 					data = true
 				} else {
 					break

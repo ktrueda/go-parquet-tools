@@ -10,7 +10,7 @@ import (
 func TestToCsvString(t *testing.T) {
 	dir, _ := os.Getwd()
 	filepath := dir + "/../test_resources/test1.parquet"
-	actual :=	toCsvString(filepath)
+	actual :=	toCsvString(filepath, TableConfigDefault)
 	expected := `one,two,three
 -1,foo,true
 <nil>,bar,false

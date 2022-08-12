@@ -25,9 +25,10 @@ jobs:
       - name: Run show
         run: |
           go-parquet-tools show ./test_resources/test1.parquet
+          go-parquet-tools show --nil None ./test_resources/test1.parquet
       - name: Run csv
         run: |
-          go-parquet-tools csv ./test_resources/test1.parquet
+          go-parquet-tools csv --nil None ./test_resources/test1.parquet
       - name: Run inspect
         run: |
           go-parquet-tools inspect ./test_resources/test1.parquet
