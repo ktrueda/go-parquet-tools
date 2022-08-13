@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/ktrueda/go-parquet-tools/gen-go/parquet"
@@ -17,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/google/uuid"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
@@ -152,7 +154,9 @@ func downloadFileFromS3(s3Bucket string, s3Key string, awsProfile string) string
 		SharedConfigState: session.SharedConfigEnable,
 	}))
 
-	filePath := "/tmp/sample.parquet"
+	rand, err := uuid.NewRandom()
+	check(err)
+	filePath := path.Join(os.TempDir(), rand.String()+".parquet")
 
 	f, err := os.Create(filePath)
 	check(err)
@@ -176,6 +180,9 @@ func downloadFileFromS3(s3Bucket string, s3Key string, awsProfile string) string
 			}
 		}
 	}
+
+	fmt.Fprintf(os.Stderr, "Downloaded s3://%s/%s to %s .\n", s3Bucket, s3Key, filePath)
+
 	return filePath
 }
 
