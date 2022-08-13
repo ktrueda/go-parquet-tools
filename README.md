@@ -2,7 +2,9 @@
 
 Alternative to [pypi parquet-tools](https://pypi.org/project/parquet-tools/) in Golang.
 
-## Install 
+You can show content/schema of parquet file(s) on local disk or on Amazon S3. It is incompatible with original parquet-tools. go-parquet-tools is faster because this is implemented in golang.
+
+## Install
 
 ```bash
 go install github.com/ktrueda/go-parquet-tools@latest
@@ -19,7 +21,8 @@ one,two,three
 ```
 
 ```bash
-go-parquet-tools show test_resources/test1.parquet
+go-parquet-tools show s3://foo/test1.parquet
+Downloaded s3://foo/test.parquet to /var/folders/f3/9l_qwscs3z94m3yw255bw4l40000gn/T/9ed16365-58e2-40f2-a492-e8477b418a0f.parquet .
 +-------+-----+-------+
 | one   | two | three |
 +-------+-----+-------+
@@ -32,6 +35,7 @@ go-parquet-tools show test_resources/test1.parquet
 ```bash
 go-parquet-tools inspect test_resources/test1.parquet
 ```
+
 <details>
 <summary>insepct output</summary>
 
@@ -169,16 +173,13 @@ FooterSigningKeyMetadata:  []
 
 </details>
 
-
 ## Benchmark result
 
 go-parquet-tools is 100x faster than pypi parquet-tools.
 
-
-| Command | Mean [ms] | Min [ms] | Max [ms] | Relative |
-|:---|---:|---:|---:|---:|
-| `parquet-tools csv test_resources/test1.parquet` | 702.8 ± 19.9 | 676.2 | 739.4 | 1.00 |
-| `go-parquet-tools csv test_resources/test1.parquet` | 6.6 ± 0.4 | 6.2 | 7.3 | 1.00 |
-
+| Command                                             |    Mean [ms] | Min [ms] | Max [ms] | Relative |
+| :-------------------------------------------------- | -----------: | -------: | -------: | -------: |
+| `parquet-tools csv test_resources/test1.parquet`    | 702.8 ± 19.9 |    676.2 |    739.4 |     1.00 |
+| `go-parquet-tools csv test_resources/test1.parquet` |    6.6 ± 0.4 |      6.2 |      7.3 |     1.00 |
 
 https://github.com/sharkdp/hyperfine
