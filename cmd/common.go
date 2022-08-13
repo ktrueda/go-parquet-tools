@@ -6,11 +6,19 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/ktrueda/go-parquet-tools/gen-go/parquet"
 
 	"github.com/apache/arrow/go/v10/parquet/file"
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/google/uuid"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
@@ -138,4 +146,54 @@ func readAsTable(filepath string, config TableConfig) table.Writer {
 		}
 	}
 	return tbl
+}
+
+func downloadFileFromS3(s3Bucket string, s3Key string, awsProfile string) string {
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		Profile:           awsProfile,
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+
+	rand, err := uuid.NewRandom()
+	check(err)
+	filePath := path.Join(os.TempDir(), rand.String()+".parquet")
+
+	f, err := os.Create(filePath)
+	check(err)
+
+	downloader := s3manager.NewDownloader(sess)
+	_, err = downloader.Download(f, &s3.GetObjectInput{
+		Bucket: aws.String(s3Bucket),
+		Key:    aws.String(s3Key),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case s3.ErrCodeNoSuchBucket:
+				fmt.Fprintf(os.Stderr, "Bucket %s does not exist\n", s3Bucket)
+				os.Exit(1)
+			case s3.ErrCodeNoSuchKey:
+				fmt.Fprintf(os.Stderr, "s3://%s/%s does not exist\n", s3Bucket, s3Key)
+				os.Exit(1)
+			default:
+				panic(err)
+			}
+		}
+	}
+
+	fmt.Fprintf(os.Stderr, "Downloaded s3://%s/%s to %s .\n", s3Bucket, s3Key, filePath)
+
+	return filePath
+}
+
+func isS3File(filepath string) bool {
+	return strings.HasPrefix(filepath, "s3://")
+}
+
+func extractS3Bucket(filepath string) string {
+	return strings.Split(filepath, "/")[2]
+}
+
+func extractS3Key(filepath string) string {
+	return strings.Join(strings.Split(filepath, "/")[3:], "/")
 }
