@@ -12,6 +12,7 @@ import (
 
 type ShowOptions struct {
 	nilExpression string
+	awsProfile    string
 }
 
 var (
@@ -27,10 +28,19 @@ var showCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		filepath := args[0]
 
+		var targetFilePath string
+		if isS3File(filepath) {
+			s3Bucket := extractS3Bucket(filepath)
+			s3Key := extractS3Key(filepath)
+			targetFilePath = downloadFileFromS3(s3Bucket, s3Key, csvOpt.awsProfile)
+		} else {
+			targetFilePath = filepath
+		}
+
 		config := TableConfig{}
 		config.nilExpression = showOpt.nilExpression
 
-		tableStr := toTableString(filepath, config)
+		tableStr := toTableString(targetFilePath, config)
 		fmt.Print(tableStr)
 	},
 }
@@ -38,6 +48,7 @@ var showCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(showCmd)
 	showCmd.Flags().StringVarP(&showOpt.nilExpression, "nil", "n", "<nil>", "nil expression")
+	showCmd.Flags().StringVarP(&csvOpt.awsProfile, "awsProfile", "a", "default", "aws profile")
 }
 
 func toTableString(filepath string, config TableConfig) string {

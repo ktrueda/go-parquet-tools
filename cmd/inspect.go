@@ -11,14 +11,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type inspectOptions struct {
+	awsProfile string
+}
+
+var (
+	inspectOpt = &inspectOptions{}
+)
+
 // inspectCmd represents the inspect command
 var inspectCmd = &cobra.Command{
 	Use:   "inspect [path/to/file]",
 	Short: "inscpect parquet file meta data",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var filePath = args[0]
-		fp, err := os.Open(filePath)
+		var filepath = args[0]
+
+		var targetFilePath string
+		if isS3File(filepath) {
+			s3Bucket := extractS3Bucket(filepath)
+			s3Key := extractS3Key(filepath)
+			targetFilePath = downloadFileFromS3(s3Bucket, s3Key, csvOpt.awsProfile)
+		} else {
+			targetFilePath = filepath
+		}
+
+		fp, err := os.Open(targetFilePath)
 		check(err)
 		defer fp.Close()
 
@@ -89,14 +107,5 @@ var inspectCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(inspectCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// inspectCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// inspectCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	inspectCmd.Flags().StringVarP(&inspectOpt.awsProfile, "awsProfile", "a", "default", "aws profile")
 }
