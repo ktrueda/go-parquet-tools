@@ -11,6 +11,10 @@ import (
 
 	"github.com/apache/arrow/go/v10/parquet/file"
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
@@ -138,4 +142,30 @@ func readAsTable(filepath string, config TableConfig) table.Writer {
 		}
 	}
 	return tbl
+}
+
+
+func downloadFileFromS3(s3Bucket string, s3Key string, awsProfile string) string{
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		Profile: awsProfile,
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+
+	filePath := "/tmp/sample.parquet"
+
+
+	f, err := os.Create(filePath)
+	if err != nil{
+		panic(err)
+	}
+
+	downloader := s3manager.NewDownloader(sess)
+	_, err = downloader.Download(f, &s3.GetObjectInput{
+		Bucket: aws.String(s3Bucket),
+		Key:    aws.String(s3Key),
+	})
+	if err != nil {
+		panic(err)
+	}
+	return filePath
 }

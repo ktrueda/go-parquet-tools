@@ -11,6 +11,7 @@ import (
 
 type CsvOptions struct {
 	nilExpression string
+	awsProfile string
 }
 
 var (
@@ -24,12 +25,14 @@ var csvCmd = &cobra.Command{
 	Long:  `show contents of a parquet file in csv format`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		filepath := args[0]
+		// filepath := args[0]
+
+		tmpFilePath := downloadFileFromS3("parquet-tools-exp", "test.parquet", csvOpt.awsProfile)
 
 		config := TableConfig{}
 		config.nilExpression = csvOpt.nilExpression
 
-		csvStr := toCsvString(filepath, config)
+		csvStr := toCsvString(tmpFilePath, config)
 		fmt.Print(csvStr)
 	},
 }
@@ -37,6 +40,7 @@ var csvCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(csvCmd)
 	csvCmd.Flags().StringVarP(&csvOpt.nilExpression, "nil", "n", "<nil>", "nil expression")
+	csvCmd.Flags().StringVarP(&csvOpt.awsProfile, "awsProfile", "a", "default", "aws profile")
 }
 
 func toCsvString(filepath string, config TableConfig) string {
