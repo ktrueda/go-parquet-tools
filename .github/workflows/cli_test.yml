@@ -13,7 +13,7 @@ jobs:
           go-version: 1.18.x
       - name: Check out code into the Go module directory
         uses: actions/checkout@v3
-      - name: Install 
+      - name: Install
         run: |
           go install
       - name: Run test[help]
@@ -26,9 +26,12 @@ jobs:
         run: |
           go-parquet-tools show ./test_resources/test1.parquet
           go-parquet-tools show --nil None ./test_resources/test1.parquet
+          go-parquet-tools show ./test_resources/*
       - name: Run csv
         run: |
+          go-parquet-tools csv ./test_resources/test1.parquet
           go-parquet-tools csv --nil None ./test_resources/test1.parquet
+          go-parquet-tools csv --nil None ./test_resources/*
       - name: Run inspect
         run: |
           go-parquet-tools inspect ./test_resources/test1.parquet
