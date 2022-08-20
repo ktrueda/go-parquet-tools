@@ -52,7 +52,7 @@ func init() {
 }
 
 func toTableString(filepath string, config TableConfig) string {
-	tbl := readAsTable(filepath, config)
+	tbl := readAsTable([]string{filepath}, config)
 	tbl.Style().Format.Header = text.FormatDefault
 	return tbl.Render()
 }

@@ -27,8 +27,15 @@ check if the file is a valid parquet file
 https://parquet.apache.org/docs/file-format/
 */
 func isParquetFile(fp *os.File) bool {
+
+	stat, err := fp.Stat()
+	check(err)
+	if stat.Mode().IsDir() || stat.Size() < 8 {
+		return false
+	}
+
 	//check first 4 bytes of the file
-	_, err := fp.Seek(0, os.SEEK_CUR)
+	_, err = fp.Seek(0, os.SEEK_CUR)
 	check(err)
 	b1 := make([]byte, 4)
 	n1, err := fp.Read(b1)
@@ -92,57 +99,79 @@ var TableConfigDefault = TableConfig{
 	nilExpression: "<nil>",
 }
 
-func readAsTable(filepath string, config TableConfig) table.Writer {
+func readAsTable(filepath []string, config TableConfig) table.Writer {
+
+	var validFilePaths []string
+	for _, fp := range filepath {
+		f, err := os.Open(fp)
+		check(err)
+		defer f.Close()
+		if !isParquetFile(f) {
+			fmt.Fprintln(os.Stderr, "Skip reading: ", fp)
+			f.Close()
+			continue
+		}
+		validFilePaths = append(validFilePaths, fp)
+	}
+	if len(validFilePaths) == 0 {
+		fmt.Fprintln(os.Stderr, "No file specified.")
+		os.Exit(1)
+	}
 
 	tbl := table.NewWriter()
-
-	rdr, err := file.OpenParquetFile(filepath, false)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "error opening parquet file: ", err)
-		os.Exit(1)
+	rdrs := make([]*file.Reader, len(validFilePaths))
+	for ind, fp := range validFilePaths {
+		rdr, err := file.OpenParquetFile(fp, false)
+		rdrs[ind] = rdr
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "error opening parquet file: ", err)
+			os.Exit(1)
+		}
 	}
 
 	// show header row
 	columns := table.Row{}
-	numOfCol := rdr.MetaData().Schema.NumColumns()
+	numOfCol := rdrs[0].MetaData().Schema.NumColumns()
 	for c := 0; c < numOfCol; c++ {
-		colName := rdr.MetaData().Schema.Column(c).Name()
+		colName := rdrs[0].MetaData().Schema.Column(c).Name()
 		columns = append(columns, colName)
 	}
 	tbl.AppendHeader(columns)
 
-	for r := 0; r < rdr.NumRowGroups(); r++ {
-		rgr := rdr.RowGroup(r)
-		// get dumpers
-		dumpers := make([]*Dumper, numOfCol)
-		for c := 0; c < numOfCol; c++ {
-			col, err := rgr.Column(c)
-			if err != nil {
-				log.Fatalf("unable to fetch err=%s", err)
+	for _, rdr := range rdrs {
+		for r := 0; r < rdr.NumRowGroups(); r++ {
+			rgr := rdr.RowGroup(r)
+			// get dumpers
+			dumpers := make([]*Dumper, numOfCol)
+			for c := 0; c < numOfCol; c++ {
+				col, err := rgr.Column(c)
+				if err != nil {
+					log.Fatalf("unable to fetch err=%s", err)
+				}
+				dumpers[c] = createDumper(col)
 			}
-			dumpers[c] = createDumper(col)
-		}
 
-		// append values
-		for {
-			rowVal := table.Row{}
-			data := false
-			for _, d := range dumpers {
-				if val, ok := d.Next(); ok {
-					if val == nil {
-						rowVal = append(rowVal, config.nilExpression)
+			// append values
+			for {
+				rowVal := table.Row{}
+				data := false
+				for _, d := range dumpers {
+					if val, ok := d.Next(); ok {
+						if val == nil {
+							rowVal = append(rowVal, config.nilExpression)
+						} else {
+							rowVal = append(rowVal, val)
+						}
+						data = true
 					} else {
-						rowVal = append(rowVal, val)
+						break
 					}
-					data = true
-				} else {
+				}
+				if !data {
 					break
 				}
+				tbl.AppendRow(rowVal)
 			}
-			if !data {
-				break
-			}
-			tbl.AppendRow(rowVal)
 		}
 	}
 	return tbl
@@ -196,4 +225,8 @@ func extractS3Bucket(filepath string) string {
 
 func extractS3Key(filepath string) string {
 	return strings.Join(strings.Split(filepath, "/")[3:], "/")
+}
+
+func isWildCard(filepath string) bool {
+	return strings.Contains(filepath, "*")
 }

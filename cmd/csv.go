@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -21,19 +22,23 @@ var (
 // csvCmd represents the csv command
 var csvCmd = &cobra.Command{
 	Use:   "csv",
-	Short: "csv [/path/to/file]",
+	Short: "csv [/path/to/file(s)]",
 	Long:  `show contents of a parquet file in csv format`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		filepath := args[0]
+		filePath := args[0]
 
-		var targetFilePath string
-		if isS3File(filepath) {
-			s3Bucket := extractS3Bucket(filepath)
-			s3Key := extractS3Key(filepath)
-			targetFilePath = downloadFileFromS3(s3Bucket, s3Key, csvOpt.awsProfile)
+		var targetFilePath []string
+		if isWildCard(filePath) {
+			globResult, err := filepath.Glob(filePath)
+			check(err)
+			targetFilePath = globResult
+		} else if isS3File(filePath) {
+			s3Bucket := extractS3Bucket(filePath)
+			s3Key := extractS3Key(filePath)
+			targetFilePath = []string{downloadFileFromS3(s3Bucket, s3Key, csvOpt.awsProfile)}
 		} else {
-			targetFilePath = filepath
+			targetFilePath = []string{filePath}
 		}
 
 		config := TableConfig{}
@@ -50,7 +55,7 @@ func init() {
 	csvCmd.Flags().StringVarP(&csvOpt.awsProfile, "awsProfile", "a", "default", "aws profile")
 }
 
-func toCsvString(filepath string, config TableConfig) string {
+func toCsvString(filepath []string, config TableConfig) string {
 	tbl := readAsTable(filepath, config)
 	return tbl.RenderCSV()
 }
