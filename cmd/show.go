@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
@@ -26,15 +27,19 @@ var showCmd = &cobra.Command{
 	Long:  `show contents of a parquet file in table format`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		filepath := args[0]
+		filePath := args[0]
 
-		var targetFilePath string
-		if isS3File(filepath) {
-			s3Bucket := extractS3Bucket(filepath)
-			s3Key := extractS3Key(filepath)
-			targetFilePath = downloadFileFromS3(s3Bucket, s3Key, csvOpt.awsProfile)
+		var targetFilePath []string
+		if isWildCard(filePath) {
+			globResult, err := filepath.Glob(filePath)
+			check(err)
+			targetFilePath = globResult
+		} else if isS3File(filePath) {
+			s3Bucket := extractS3Bucket(filePath)
+			s3Key := extractS3Key(filePath)
+			targetFilePath = []string{downloadFileFromS3(s3Bucket, s3Key, csvOpt.awsProfile)}
 		} else {
-			targetFilePath = filepath
+			targetFilePath = []string{filePath}
 		}
 
 		config := TableConfig{}
@@ -51,7 +56,7 @@ func init() {
 	showCmd.Flags().StringVarP(&csvOpt.awsProfile, "awsProfile", "a", "default", "aws profile")
 }
 
-func toTableString(filepath string, config TableConfig) string {
+func toTableString(filepath []string, config TableConfig) string {
 	tbl := readAsTable(filepath, config)
 	tbl.Style().Format.Header = text.FormatDefault
 	return tbl.Render()

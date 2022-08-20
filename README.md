@@ -21,6 +21,20 @@ one,two,three
 ```
 
 ```bash
+go-parquet-tools show --nil None "test_resources/*"
++------+-----+-------+
+| one  | two | three |
++------+-----+-------+
+| -1   | foo | true  |
+| None | bar | false |
+| 2.5  | baz | true  |
+| -1   | foo | true  |
+| None | bar | false |
+| 2.5  | baz | true  |
++------+-----+-------+
+```
+
+```bash
 go-parquet-tools show s3://foo/test1.parquet
 Downloaded s3://foo/test.parquet to /var/folders/f3/9l_qwscs3z94m3yw255bw4l40000gn/T/9ed16365-58e2-40f2-a492-e8477b418a0f.parquet .
 +-------+-----+-------+
