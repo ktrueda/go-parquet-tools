@@ -12,6 +12,7 @@ import (
 
 type CsvOptions struct {
 	nilExpression string
+	skipHeader    bool
 	awsProfile    string
 }
 
@@ -41,8 +42,10 @@ var csvCmd = &cobra.Command{
 			targetFilePath = []string{filePath}
 		}
 
-		config := TableConfig{}
-		config.nilExpression = csvOpt.nilExpression
+		config := TableConfig{
+			nilExpression: csvOpt.nilExpression,
+			skipHeader:    csvOpt.skipHeader,
+		}
 
 		csvStr := toCsvString(targetFilePath, config)
 		fmt.Print(csvStr)
@@ -52,6 +55,7 @@ var csvCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(csvCmd)
 	csvCmd.Flags().StringVarP(&csvOpt.nilExpression, "nil", "n", "<nil>", "nil expression")
+	csvCmd.Flags().BoolVarP(&csvOpt.skipHeader, "skipHeader", "s", false, "skip header row")
 	csvCmd.Flags().StringVarP(&csvOpt.awsProfile, "awsProfile", "a", "default", "aws profile")
 }
 

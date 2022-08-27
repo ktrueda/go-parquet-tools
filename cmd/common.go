@@ -93,6 +93,7 @@ func getFileMetaSize(fp *os.File) int {
 
 type TableConfig struct {
 	nilExpression string
+	skipHeader    bool `default:"false"`
 }
 
 var TableConfigDefault = TableConfig{
@@ -129,14 +130,16 @@ func readAsTable(filepath []string, config TableConfig) table.Writer {
 		}
 	}
 
-	// show header row
-	columns := table.Row{}
 	numOfCol := rdrs[0].MetaData().Schema.NumColumns()
-	for c := 0; c < numOfCol; c++ {
-		colName := rdrs[0].MetaData().Schema.Column(c).Name()
-		columns = append(columns, colName)
+	// show header row
+	if !config.skipHeader {
+		columns := table.Row{}
+		for c := 0; c < numOfCol; c++ {
+			colName := rdrs[0].MetaData().Schema.Column(c).Name()
+			columns = append(columns, colName)
+		}
+		tbl.AppendHeader(columns)
 	}
-	tbl.AppendHeader(columns)
 
 	for _, rdr := range rdrs {
 		for r := 0; r < rdr.NumRowGroups(); r++ {

@@ -32,6 +32,7 @@ jobs:
           go-parquet-tools csv ./test_resources/test1.parquet
           go-parquet-tools csv --nil None ./test_resources/test1.parquet
           go-parquet-tools csv --nil None "./test_resources/*"
+          go-parquet-tools csv --skipHeader "./test_resources/*"
       - name: Run inspect
         run: |
           go-parquet-tools inspect ./test_resources/test1.parquet
