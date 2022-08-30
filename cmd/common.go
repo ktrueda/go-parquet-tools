@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/ktrueda/go-parquet-tools/gen-go/parquet"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/briandowns/spinner"
 	"github.com/google/uuid"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -181,6 +183,7 @@ func readAsTable(filepath []string, config TableConfig) table.Writer {
 }
 
 func downloadFileFromS3(s3Bucket string, s3Key string, awsProfile string) string {
+
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		Profile:           awsProfile,
 		SharedConfigState: session.SharedConfigEnable,
@@ -194,6 +197,11 @@ func downloadFileFromS3(s3Bucket string, s3Key string, awsProfile string) string
 	check(err)
 
 	downloader := s3manager.NewDownloader(sess)
+
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
+	s.Suffix = " Downloading s3://" + s3Bucket + "/" + s3Key + " to " + filePath
+	s.Start()
+
 	_, err = downloader.Download(f, &s3.GetObjectInput{
 		Bucket: aws.String(s3Bucket),
 		Key:    aws.String(s3Key),
@@ -212,8 +220,7 @@ func downloadFileFromS3(s3Bucket string, s3Key string, awsProfile string) string
 			}
 		}
 	}
-
-	fmt.Fprintf(os.Stderr, "Downloaded s3://%s/%s to %s .\n", s3Bucket, s3Key, filePath)
+	s.Stop()
 
 	return filePath
 }
